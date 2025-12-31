@@ -1,0 +1,178 @@
+---
+title: "Customer Churn Analysis"
+author: "Shahbaz"
+date: "2025-12-18"
+output: html_document
+---
+
+## Summary
+
+This project analyzes customer churn behavior using R, with the objective of identifying key churn drivers and building predictive models to flag high-risk customers. Since an explicit churn label was not available in the dataset, churn was defined using domain-driven behavioral rules based on customer tenure, usage frequency, support interactions, and payment delays.
+
+The analysis begins with exploratory data analysis (EDA) to understand customer behavior and churn patterns across subscription types and contract lengths. Feature engineering was performed to construct a binary churn indicator, followed by the calculation of churn rate as a key business metric.
+
+Predictive modeling was conducted using logistic regression and decision tree classifiers. A train-test split was applied to ensure proper model evaluation. Model performance was assessed using confusion matrix metrics and ROC-AUC, demonstrating strong predictive capability. The project concludes with churn driver analysis and identification of high-risk customers to support targeted retention strategies.
+
+
+# Loaded Necessary Libraries 
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(knitr)
+library(dplyr)
+```
+
+# Data Loading
+```{r}
+churn <- read.csv("/Users/shahbazshaikh/Downloads/customer_churn_dataset-testing-master.csv")
+head(churn)
+```
+
+# Summarization
+```{r}
+str(churn)
+summary(churn)
+```
+
+# Feature Engineering – Create Churn Label
+```{r}
+churn <- churn %>%
+  mutate(
+    Churn = ifelse(
+      (Tenure < 12 & Usage.Frequency < 5) |
+      (Support.Calls >= 4) |
+      (Payment.Delay > 20),
+      1, 0
+    )
+  )
+
+churn$Churn <- factor(churn$Churn, labels = c("No", "Yes"))
+```
+
+# Churn Rate KPI
+```{r}
+churn_rate <- mean(churn$Churn == "Yes") * 100
+churn_rate
+```
+
+# Churn by Contract Length
+```{r}
+ggplot(churn, aes(Contract.Length, fill = Churn)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Churn Rate by Contract Length")
+```
+
+# Churn by Subscription Type
+```{r}
+ggplot(churn, aes(Subscription.Type, fill = Churn)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Churn Rate by Subscription Type")
+```
+
+
+# Train-Test Split
+```{r}
+set.seed(123)
+
+train_index <- createDataPartition(churn$Churn, p = 0.7, list = FALSE)
+train_data <- churn[train_index, ]
+test_data  <- churn[-train_index, ]
+```
+
+# Logistic Regression Model
+```{r}
+log_model <- glm(
+  Churn ~ Tenure + Usage.Frequency + Support.Calls +
+    Payment.Delay + Subscription.Type + Contract.Length,
+  data = train_data,
+  family = "binomial"
+)
+
+summary(log_model)
+```
+
+# Predicting Churn on Test Data
+```{r}
+test_prob <- predict(log_model, test_data, type = "response")
+
+test_pred <- ifelse(test_prob > 0.5, "Yes", "No")
+test_pred <- factor(test_pred, levels = c("No", "Yes"))
+```
+
+# Confusion Matrix Evaluation
+```{r}
+confusionMatrix(test_pred, test_data$Churn, positive = "Yes")
+```
+
+
+# ROC Curve & AUC
+```{r}
+library(pROC)
+roc_obj <- roc(
+  response = test_data$Churn,
+  predictor = test_prob,
+  levels = c("No", "Yes")
+)
+
+plot(roc_obj, main = "ROC Curve for Churn Prediction")
+auc(roc_obj)
+```
+
+# Decision Tree Model
+```{r}
+tree_model <- rpart(
+  Churn ~ Tenure + Usage.Frequency + Support.Calls +
+    Payment.Delay + Subscription.Type + Contract.Length,
+  data = churn,
+  method = "class"
+)
+
+rpart.plot(tree_model)
+```
+
+# Customer Engagement Visualization
+```{r}
+ggplot(churn, aes(Tenure, Usage.Frequency, color = Churn)) +
+  geom_point(size = 3, alpha = 0.7) +
+  labs(title = "Usage Frequency vs Tenure (Colored by Churn)")
+```
+
+# Churn Driver Analysis
+```{r}
+churn %>%
+  filter(Churn == "Yes") %>%
+  summarise(
+    Low_Usage = sum(Usage.Frequency < 5),
+    High_Support = sum(Support.Calls >= 4),
+    Payment_Issues = sum(Payment.Delay > 20)
+  ) %>%
+  pivot_longer(everything()) %>%
+  ggplot(aes(name, value, fill = name)) +
+  geom_col() +
+  labs(title = "Top Reasons for Churn")
+```
+
+# High-Risk Customer Identification
+```{r}
+high_risk <- churn %>%
+  filter(
+    Tenure < 12,
+    Usage.Frequency < 5,
+    Support.Calls >= 3
+  )
+
+kable(head(high_risk))
+```
+
+## Conclusion
+
+The churn prediction model achieved strong performance, with high overall accuracy and excellent recall for churned customers. The logistic regression model successfully identified the majority of at-risk customers while maintaining high precision, making it suitable for real-world churn prevention use cases where minimizing missed churners is critical.
+
+Key factors contributing to churn include low usage frequency, short customer tenure, frequent support interactions, and payment delays. These insights suggest that early-stage engagement, proactive customer support, and improved billing processes could significantly reduce churn rates.
+
+Although the churn label was rule-based rather than observed, this project demonstrates a complete end-to-end analytics workflow, including data preparation, exploratory analysis, predictive modeling, evaluation, and actionable insight generation. With real churn outcomes, the same framework could be extended into a production-ready churn prediction system.
