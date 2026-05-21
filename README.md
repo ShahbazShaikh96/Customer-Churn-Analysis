@@ -1,39 +1,29 @@
-## Customer Churn Analysis (R)
+# Customer Churn Analysis
 
-# Overview
-This project analyzes customer churn behavior using R and R Markdown.
-The goal is to identify key drivers of churn and build predictive models to help businesses improve customer retention strategies.
+This project analyzes customer churn behavior using R and R Markdown. It identifies behavioral churn signals, builds predictive models, and translates the results into retention-focused business recommendations.
 
-# Project Structure
-Customer-Churn-Analysis.html – Interactive HTML report generated from R Markdown
+## What This Project Contains
 
-# R Markdown source – Contains code, visualizations, and narrative analysis
+- `Customer Churn Analysis.Rmd`: Source analysis with data loading, feature engineering, exploratory analysis, model training, and evaluation.
+- `Customer-Churn-Analysis.html`: Rendered report with embedded charts, model output, and narrative interpretation.
+- `customer_churn_csv.csv`: Dataset used by the R Markdown workflow.
 
-# Dataset – Includes customer usage, support, payment, and subscription data
+## Business Question
 
-# Key Objectives
-Calculate churn rate
-Identify primary churn drivers
-Build and evaluate predictive churn models
-Detect high-risk customer segments
+Which customer behaviors and account characteristics are most associated with churn risk, and how can those patterns support retention prioritization?
 
-# Techniques Used
-Data Cleaning & Feature Engineering
-Exploratory Data Analysis (EDA)
-Predictive Modeling (Logistic Regression, Decision Trees, etc.)
-Customer Segmentation & Risk Profiling
-Key Insights (from report)
-Low usage frequency and short customer tenure are strong predictors of churn
-High support call volume strongly correlates with churn likelihood
-Payment delays and subscription irregularities are major churn indicators
+## Analytical Approach
 
-# Tools & Libraries
-R, R Markdown, knitr
-tidyverse, ggplot2, dplyr
-caret, rpart, randomForest
-pandoc (for HTML rendering)
+- Created a churn label from tenure, usage frequency, support interactions, and payment delay behavior.
+- Explored churn patterns across contract length and subscription type.
+- Trained logistic regression and decision tree models using a train-test split.
+- Evaluated model performance with confusion matrix metrics and ROC-AUC.
+- Identified high-risk customer segments for targeted retention action.
 
-# Output
-Interactive HTML report with embedded visualizations and analysis
-Predictive model summaries and performance metrics
-Actionable business recommendations for churn reduction
+## Tools Used
+
+R, R Markdown, tidyverse, ggplot2, caret, rpart, rpart.plot, knitr.
+
+## Reproducibility Note
+
+The R Markdown file now uses the relative file path `customer_churn_csv.csv`, so the analysis can be rerun from the repository root without relying on a local machine path.

@@ -27,7 +27,7 @@ library(dplyr)
 
 # Data Loading
 ```{r}
-churn <- read.csv("/Users/shahbazshaikh/Downloads/customer_churn_dataset-testing-master.csv")
+churn <- read.csv("customer_churn_csv.csv")
 head(churn)
 ```
 
